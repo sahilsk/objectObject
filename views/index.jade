@@ -1,14 +1,6 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
 
-  div(ng-controller='TestCtrl')
-    .dropzone(file-dropzone='[image/png, image/jpeg, image/gif]', file='image', file-name='imageFileName', data-max-file-size='3')
-      span Drop Image Here
-      |     
-    .image-container
-      img(ng-src='{{image}}')
-      |       
-      span.file-name {{imageFileName}}
+
+

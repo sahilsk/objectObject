@@ -1,19 +1,40 @@
 ( function(){
 	"user strict";
-	var app = angular.module("DemoApp", []);
+	var app = angular.module("DemoApp", ['ngRoute']);
 
-	app.directive("introMessage", function(){
-		return {
+	app.config(function($routeProvider, $locationProvider) {
+	  $routeProvider
+	   .when('/upload', {
+	    templateUrl: '/javascripts/angular/views/upload.html',
+	    controller: "UploadCtrl"
+	  })
+	   .when('/about', {
+	    templateUrl: '/javascripts/angular/views/about.html',
+	    controller:'AboutCtrl'
+	  })
+	  .when('/about', {
+	    templateUrl: '/javascripts/angular/views/base64.html'
+	  })	   
+	  .otherwise({
+                    redirectTo: '/',
+                    templateUrl: "/javascripts/angular/views/hello.html"
+                });
 
-			restrict: 'E',
-			templateUrl: "/javascripts/angular/views/hello.html"
-		};
+	  //  $locationProvider.html5Mode(true);
 	});
 
-	app.controller('TestCtrl', function($scope) {
+    app.controller('AboutCtrl',function($scope,$location){
+    	$scope.isActive = function(route) {
+    		console.log(route, $location.path);
+       	 return route === $location.path();
+    	}	
+    });
+	app.controller('UploadCtrl', function($scope) {
         $scope.image = null;
         $scope.imageFileName = '';
-    }).directive('fileDropzone', function() {
+    });
+
+    app.directive('fileDropzone', function() {
 	    return {
 	      restrict: 'A',
 	      scope: {
@@ -49,34 +70,51 @@
 	            return false;
 	          }
 	        };
+	        
+	        element.bind('dragenter', function(ev){
+	        	$(element).toggleClass("toggleEnter");
+	        });
+	        element.bind('dragleave', function(ev){
+	        	$(element).toggleClass("toggleEnter");
+	        });
 	        element.bind('dragover', processDragOverOrEnter);
 	        element.bind('dragenter', processDragOverOrEnter);
+
 	        return element.bind('drop', function(event) {
 	          var file, name, reader, size, type;
 	          if (event != null) {
 	            event.preventDefault();
-	          }
+	          }          
+
 	          reader = new FileReader();
 	          reader.onload = function(evt) {
 	            if (checkSize(size) && isTypeValid(type)) {
 	              return scope.$apply(function() {
-	                scope.file = evt.target.result;
+	                scope.file = "data:" + file.type + ";base64," + btoa(evt.target.result);
 	                if (angular.isString(scope.fileName)) {
 	                  return scope.fileName = name;
 	                }
 	              });
 	            }
 	          }
-	          reader.onloadend = function () {
-			   console.log(reader.result);
+	          reader.onloadend = function (readEvt) {
+	          	console.log( btoa(readEvt.target.result) ); 
+	          	$(element).removeClass("toggleDrop toggleEnter");
+	          	$(element).find("span").text("Drop File Here");
 			  }
 
 
 	          file = event.originalEvent.dataTransfer.files[0];
-	          name = file.name;
-	          type = file.type;
-	          size = file.size;
-	          reader.readAsDataURL(file);
+	          if( file ){
+      	          console.log(file);
+      	          name = file.name;
+      	          type = file.type;
+      	          size = file.size;
+      	          reader.readAsBinaryString(file);
+   		          $(element).toggleClass("toggleDrop");
+  		          $(element).find("span").text("Calculating...");
+	          	}
+			  //reader.readAsDataURL(file);
 	          return false;
 	        });
 	      }

@@ -164,9 +164,7 @@ body {
 
 
 .dropzone {
-  width: 250px;
-  height: 45px;
-  border: 1px solid #ccc;
+  border: 1px dashed  #ccc;
   text-align: center;
   padding: 30px;
   margin: 20px;
@@ -184,4 +182,12 @@ body {
 
 .file-name {
    font-family: Arial;   
+}
+
+.toggleDrop{
+  background-color: #ccc !important;
+}
+
+.toggleEnter {
+  background-color: #595959 ;
 }

@@ -33,18 +33,18 @@ head
               h3.masthead-brand Cover
               |               
               nav
-                ul.nav.masthead-nav
-                  li.active
-                    a(href='#') Home
+                ul(ng-init="tab='home' ").nav.masthead-nav
+                  li( ng-class="{active:tab==='home' }" )
+                    a(href='#' ng-click="tab='home' ") Home
                   |                   
-                  li
-                    a(href='#') Features
+                  li( ng-class="{active:tab==='upload' }" )
+                    a(ng-href='#upload' ng-click="tab='upload' ") Upload
                   |                   
-                  li
-                    a(href='#') Contact
+                  li( ng-class="{active:tab==='about' }" )
+                    a(href='#about' ng-click="tab='about' ") About
           |           
           .inner.cover
-            intro-message
+            ng-view
           |  
 
         block content 
@@ -71,4 +71,5 @@ head
       Angular Js
       --------------
     script(src='/bower_components/angular/angular.min.js')
+    script(src='/bower_components/angular-route/angular-route.min.js')
     script(src='/javascripts/angular/app.js')
