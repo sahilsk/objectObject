@@ -12,7 +12,7 @@
 	    templateUrl: '/javascripts/angular/views/about.html',
 	    controller:'AboutCtrl'
 	  })
-	  .when('/about', {
+	  .when('/base64', {
 	    templateUrl: '/javascripts/angular/views/base64.html'
 	  })	   
 	  .otherwise({
