@@ -13,7 +13,8 @@
 	    controller:'AboutCtrl'
 	  })
 	  .when('/base64', {
-	    templateUrl: '/javascripts/angular/views/base64.html'
+	    templateUrl: '/javascripts/angular/views/base64.html',
+	    controller:'Base64Ctrl'
 	  })	   
 	  .otherwise({
                     redirectTo: '/',
@@ -23,30 +24,36 @@
 	  //  $locationProvider.html5Mode(true);
 	});
 
-	app.service("fileService", function(){
-		this.enodedFiles = [];
+	app.service("FileService", function(){
+		this.encodedFiles = [];
 
 	});
+	app.controller('Base64Ctrl', ['$scope', 'FileService',
+	 function($scope, fileService) {
+    	   $scope.storedFiles = fileService.encodedFiles;
 
+    	   $scope.clearFiles  = function(){
+    	   	console.log("clearing files");
+    	   	$scope.storedFiles.splice(0, $scope.storedFiles.length)
+    	   }
+
+    }])
     app.controller('AboutCtrl',function($scope,$location){
     	$scope.isActive = function(route) {
     		console.log(route, $location.path);
        	 return route === $location.path();
     	}	
     });
-	app.controller('UploadCtrl', function($scope) {
-        $scope.image = null;
-        $scope.imageFileName = '';
-        $scope.files = [];
-    });
+	app.controller('UploadCtrl', ['$scope', 'FileService', function($scope, fileService) {
+        $scope.storedFiles = fileService.encodedFiles;
 
-    app.directive('fileDropzone', function() {
+    }]);
+
+    app.directive('fileDropzone', ['FileService',  function(fileService) {
 	  return {
 	    restrict: 'A',
 	    scope: {
-	      files: "=",
-	      file: '=',
-	      fileName: '=',
+	      uploadedFiles: "=",
 	      dropzoneHoverClass: '@'
 	    },
 	    link: function(scope, element, attrs) {
@@ -56,7 +63,7 @@
 	        return dataTransfer = event.dataTransfer || event.originalEvent.dataTransfer;
 	      };
 	      processDragOverOrEnter = function(event) {
-		        if (event) {
+		    if (event) {
 		          element.addClass(scope.dropzoneHoverClass);
 		          if (event.preventDefault) {
 		            event.preventDefault();
@@ -79,7 +86,6 @@
 		        }
 	      };
 	      isTypeValid = function(type) {
-	      	return true;
 	        if ((validMimeTypes === (void 0) || validMimeTypes === '') || validMimeTypes.indexOf(type) > -1) {
 	          return true;
 	        } else {
@@ -95,17 +101,15 @@
 	      return element.bind('drop', function(event) {
 	        var file, name, reader, size, type;
 	        var chunkSize=4096, offset = 0, chunk = null;
+	        var totalFiles = getDataTransfer(event).files.length;
+
 	        if (event != null) {
 	          event.preventDefault();
 	        }
 	        element.removeClass(scope.dropzoneHoverClass);
 
 
-	        var readInChunks = (function(){
-        		var chunkSize = 4096;
-        		var fiieArray = [];
-			
-        		return function( file, cb){
+	        var readInChunks =  function( file, cb){
         			var size = file.size;
         			var type = file.type;
         			var name = file.name;
@@ -116,60 +120,101 @@
 
 			        reader.onload = function(evt) {
 			          if (checkSize(size) && isTypeValid(type)) {
-			            scope.$apply(function() {
-			              iFile["image"] =  "data:" + file.type + ";base64," + btoa(evt.target.result) ;
-			              iFile["base64"] = btoa(evt.target.result);			              
-			              scope.file = "data:" + file.type + ";base64," + btoa(evt.target.result);
-			              if (angular.isString(scope.fileName)) {
+			       		iFile["image"] =  "data:" + file.type + ";base64," + btoa(evt.target.result) ;
+			            iFile["base64"] = btoa(evt.target.result);	
+		                if (angular.isString( name)) {
 			              	iFile["name"] =  name;
-			                return scope.fileName = name;
-			              }
-			            });
-			            
+			            }			            
 			          }// end 'if'
 
+			         // return iFile;
 			        } // end 'onload'
 			       
 			       reader.onloadend = function(evt){
-			       	cb( iFile );
+			       	 return cb( iFile );
 			       }
 
 			        reader.onprogress = function(data) {
 		            	if (data.lengthComputable) {                                            
 		                	var progress = parseInt( ((data.loaded / data.total) * 100), 10 );
-		                	scope.files[name]["progress"] = progress;
+		                	iFile["progress"] = progress;
 		                	console.log(progress);
 		            	}
 		       		}
-        		}
+	        }
 
-	        })();	
+	        var convertFile = function( file, cb){
 
+		        if( !file ){
+		        	console.log("not a valid file", file);
+		        	//alert("Only files please");
+		        	cb("wrong fle");
+		        	return;
+		        }
+		        readInChunks( file, function(readFileObj){		        	
+		        	cb( readFileObj);
+		        });
+	        } // end 'convertFile'
 
+			function asyncLoop(iterations, func, callback) {
+			    var index = 0;
+			    var done = false;
+			    var loop = {
+			        next: function() {
+			            if (done) {
+			                return;
+			            }
 
-	        function convertFile( file){
-		        if( file ){
-			        name = file.name;
-			        type = file.type;
-			        size = file.size;
-			        scope.files[name] = {
-			        	"name" : name,
-			        	"type" : type,
-			        	"size" : size
+			            if (index < iterations) {
+			                index++;
+			                func(loop);
+
+			            } else {
+			                done = true;
+			                callback();
+			            }
+			        },
+
+			        iteration: function() {
+			            return index - 1;
+			        },
+
+			        break: function() {
+			            done = true;
+			            callback();
 			        }
-			        readInChunks( file, function(data){
-			        	scope.files[name]["image"] = data.image;
-			        	scope.files[name]["base64"] = data["base64"];
-			        });
+			    };
+			    loop.next();
+			    return loop;
+			}
 
-			    }else{
-			    	console.log("Not a file");
-			    }
-	        }
+			(function(){
+				var eEvent = getDataTransfer(event);
+				var eFiles = eEvent.files;
+				var totalFiles  = eFiles.length;
 
-	        for( var i = 0; i < getDataTransfer(event).files.length; i++ ){
-	        	convertFile( getDataTransfer(event).files[i] );
-	        }
+				asyncLoop(totalFiles, function(loop) {
+				    convertFile( eFiles[loop.iteration() ], function(data) {
+				    	
+				    	scope.$apply(function(){
+				    		scope.uploadedFiles.push(data);
+				    	});
+				    	
+				        console.log(loop.iteration());
+				        loop.next();
+				    })},
+				    function(){
+				    	console.log('cycle ended')
+				    	//scope.$apply( function(){
+				    		//fileService.encodedFiles = scope.uploadedFiles;
+				    		console.log( scope.uploadedFiles) ;
+				    		scope.$apply();
+				    	//});
+				    	
+					}
+				);
+
+			})();	
 
 	        return false;
 
@@ -177,7 +222,7 @@
 
 	    }
 	  };
-	});
+	} ]);
 
 	
 

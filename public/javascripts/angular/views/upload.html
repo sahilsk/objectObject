@@ -1,13 +1,16 @@
 <div ng-controller="UploadCtrl">
   <div  file-dropzone="[image/png, image/jpeg, image/gif]" 
-  		file="image" files="files" file-name="imageFileName" max-file-size="13" dropzone-hover-class="toggleEnter"
+  		 uploaded-files="storedFiles" max-file-size="13" dropzone-hover-class="toggleEnter"
   		class="dropzone">
   		<span>Drop Image Here</span> 
    </div>
- 
-  <div class="image-container" ng-repeat="file in files">
-  	 <img ng-src="{{file.image}}"/>      
-  	 <span class="file-name">	{{file.name}} </span>
-  	 <a ng-href="#base64"> base64 </a>
-  </div>
+
+  <table>
+    <tr  ng-repeat="curFile in storedFiles">
+  	  <td style="font:12px;">  {{ curFile.name}}  </td>
+      <td class="image-container"> <img ng-src="{{curFile.image}}" /> </td>
+      <td> <div style="width:400px; height:30px; overflow:auto;"> {{curFile.base64}} </div></td>
+    </tr>
+  </table>
+  <a ng-href="#base64"> see encoded </a>
 </div>

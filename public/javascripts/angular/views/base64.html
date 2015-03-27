@@ -1,3 +1,11 @@
-<div style="height:30%">
-{{ encodedString }}
-</div>
+  <h1> Encoded files </h1>
+
+  <table>
+    <tr  ng-repeat="curFile in storedFiles">
+  	  <td style="font:12px;">  {{ curFile.name}}  </td>
+      <td class="image-container"> <img ng-src="{{curFile.image}}" /> </td>
+      <td> <div style="width:400px; height:30px; overflow:auto;"> {{curFile.base64}} </div></td>
+    </tr>
+  </table>
+
+  <button ng-show="storedFiles.length > 0" ng-click="clearFiles()" > Clear Files </button>
