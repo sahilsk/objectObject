@@ -123,7 +123,9 @@
 			        reader.onload = function(evt) {
 			          if (checkSize(size) && isTypeValid(type)) {
 			          	iFile["type"] = file.type;
-			       		iFile["image"] =  "data:" + file.type + ";base64," + btoa(evt.target.result) ;
+			          	if( file.type.indexOf("image") !== -1)
+				       		iFile["image"] =  "data:" + file.type + ";base64," + btoa(evt.target.result) ;
+
 			            iFile["base64"] = btoa(evt.target.result);	
 		                if (angular.isString( name)) {
 			              	iFile["name"] =  name;
