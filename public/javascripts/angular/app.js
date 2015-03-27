@@ -89,6 +89,7 @@
 	        if ((validMimeTypes === (void 0) || validMimeTypes === '') || validMimeTypes.indexOf(type) > -1) {
 	          return true;
 	        } else {
+	          console.log( "file type: ", type);
 	          alert("Invalid file type.  File must be one of following types " + validMimeTypes);
 	          return false;
 	        }
@@ -116,22 +117,32 @@
 					var reader = new FileReader();
 	 				reader.readAsBinaryString(file);
 	 				var iFile = {};
+	 				var gotError = false;
 
 
 			        reader.onload = function(evt) {
 			          if (checkSize(size) && isTypeValid(type)) {
+			          	iFile["type"] = file.type;
 			       		iFile["image"] =  "data:" + file.type + ";base64," + btoa(evt.target.result) ;
 			            iFile["base64"] = btoa(evt.target.result);	
 		                if (angular.isString( name)) {
 			              	iFile["name"] =  name;
 			            }			            
-			          }// end 'if'
+			          }else{
+			          	gotError = true;
+			          	return;
+			          }
 
 			         // return iFile;
 			        } // end 'onload'
 			       
 			       reader.onloadend = function(evt){
-			       	 return cb( iFile );
+			       		if( !gotError )	
+				       	 	cb(null, iFile );
+				      	else
+				      		cb("invalid file", null);
+
+			       	 return ;
 			       }
 
 			        reader.onprogress = function(data) {
@@ -146,13 +157,13 @@
 	        var convertFile = function( file, cb){
 
 		        if( !file ){
-		        	console.log("not a valid file", file);
+		        	console.log("not a file", file);
 		        	//alert("Only files please");
-		        	cb("wrong fle");
+		        	cb("Not a file", null);
 		        	return;
 		        }
-		        readInChunks( file, function(readFileObj){		        	
-		        	cb( readFileObj);
+		        readInChunks( file, function(err, readFileObj){
+		        	cb(err, readFileObj);
 		        });
 	        } // end 'convertFile'
 
@@ -194,23 +205,22 @@
 				var totalFiles  = eFiles.length;
 
 				asyncLoop(totalFiles, function(loop) {
-				    convertFile( eFiles[loop.iteration() ], function(data) {
+				    convertFile( eFiles[loop.iteration()], function(err, data) {
 				    	
 				    	scope.$apply(function(){
-				    		scope.uploadedFiles.push(data);
+				    		if( !err && typeof data === "object"){
+					    		scope.uploadedFiles.push(data);
+				    		}else{
+				    			console.log("Error reading file: ", err);
+				    		}
 				    	});
 				    	
 				        console.log(loop.iteration());
 				        loop.next();
 				    })},
 				    function(){
-				    	console.log('cycle ended')
-				    	//scope.$apply( function(){
-				    		//fileService.encodedFiles = scope.uploadedFiles;
-				    		console.log( scope.uploadedFiles) ;
-				    		scope.$apply();
-				    	//});
-				    	
+				    	console.log('cycle ended');
+			    		console.log( scope.uploadedFiles);
 					}
 				);
 

@@ -1,5 +1,5 @@
 <div ng-controller="UploadCtrl">
-  <div  file-dropzone="[image/png, image/jpeg, image/gif]" 
+  <div  file-dropzone="[image/png, image/jpeg, image/gif, application/pdf]" 
   		 uploaded-files="storedFiles" max-file-size="13" dropzone-hover-class="toggleEnter"
   		class="dropzone">
   		<span>Drop Image Here</span> 
@@ -8,9 +8,10 @@
   <table>
     <tr  ng-repeat="curFile in storedFiles">
   	  <td style="font:12px;">  {{ curFile.name}}  </td>
-      <td class="image-container"> <img ng-src="{{curFile.image}}" /> </td>
+      <td class="image-container" ng-if="curFile.type.indexOf('image') !== -1" > <img ng-src="{{curFile.image}}" /> </td>
+     
       <td> <div style="width:400px; height:30px; overflow:auto;"> {{curFile.base64}} </div></td>
     </tr>
   </table>
-  <a ng-href="#base64"> see encoded </a>
+  <a ng-href="#base64" ng-show="storedFiles.length > 0"> see encoded </a>
 </div>
